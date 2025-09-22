@@ -179,7 +179,6 @@ async function main() {
     config.excludes = userConfig.excludes;
   }
 
- if (projectType === "node") {
     console.log(`
 Please select one option:
 1) Analyse the source code and provide an overview
@@ -189,17 +188,9 @@ Please select one option:
 5) Generate import/export relationships
 
 `);
-  } else {
-    console.log(`
-Please select one option:
-1) Analyse the source code and provide an overview
-2) Extract the feature list and create a CSV file
-3) Generate a README.MD file
-4) No additional prompt
-`);
-  }
+  
 
-const choice = await askQuestion("Enter your choice : ");
+const choice = await askQuestion("Enter your choice (1-5): ");
 let tplFile = "";
 
 switch (choice) {
@@ -216,13 +207,8 @@ switch (choice) {
     tplFile = path.join(__dirname, "config/prompt.tpl");
     break;
   case "5":
-    if (projectType === "node") {
       tplFile = path.join(__dirname, "config/imports.tpl");
-    } else {
-      console.error("This option is only available for Node projects.");
-      return;
-    }
-    break;
+   
 }
 
   //Build tree & contents using final config
