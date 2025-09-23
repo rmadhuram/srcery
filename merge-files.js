@@ -179,33 +179,37 @@ async function main() {
     config.excludes = userConfig.excludes;
   }
 
-  // Ask choice
-  console.log(`
+    console.log(`
 Please select one option:
 1) Analyse the source code and provide an overview
 2) Extract the feature list and create a CSV file
 3) Generate a README.MD file
 4) No additional prompt
+5) Generate import/export relationships
+
 `);
+  
 
-  const choice = await askQuestion("Enter your choice (1-4): ");
-  let tplFile = "";
+const choice = await askQuestion("Enter your choice (1-5): ");
+let tplFile = "";
 
-  switch (choice) {
-    case "1":
-      tplFile = path.join(__dirname, "config/analyze.tpl");
-      break;
-    case "2":
-      tplFile = path.join(__dirname, "config/features.tpl");
-      break;
-    case "3":
-      tplFile = path.join(__dirname, "config/readme.tpl");
-      break;
-    case "4":
-    default:
-      tplFile = path.join(__dirname, "config/prompt.tpl");
-      break;
-  }
+switch (choice) {
+  case "1":
+    tplFile = path.join(__dirname, "config/analyze.tpl");
+    break;
+  case "2":
+    tplFile = path.join(__dirname, "config/features.tpl");
+    break;
+  case "3":
+    tplFile = path.join(__dirname, "config/readme.tpl");
+    break;
+  case "4":
+    tplFile = path.join(__dirname, "config/prompt.tpl");
+    break;
+  case "5":
+      tplFile = path.join(__dirname, "config/imports.tpl");
+   
+}
 
   //Build tree & contents using final config
   let result = { tree: "", contents: "" };
