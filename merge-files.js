@@ -30,22 +30,45 @@ const codeTpl = fs.readFileSync(
   "utf8"
 );
 
+let totalFiles = 0;
+let totalLines = 0;
+const langLines = {};
+
+// Add the countLines function here
+function countLines(filePath) {
+  return new Promise((resolve, reject) => {
+    let lineCount = 0;
+    const stream = fs.createReadStream(filePath);
+    stream.on('data', chunk => {
+      for (let i = 0; i < chunk.length; i++) {
+        if (chunk[i] === 10) { // ASCII code for '\n' (newline)
+          lineCount++;
+        }
+      }
+    });
+    stream.on('end', () => {
+      resolve(lineCount);
+    });
+    stream.on('error', reject);
+  });
+}
+
 // Recursive function to read files and build tree
-function readAndMerge(dir, baseDir, level, result) {
+async function readAndMerge(dir, baseDir, level, result) {
   const files = fs.readdirSync(dir);
 
-  files.forEach((file) => {
+  for (const file of files) {
     const fullPath = path.join(dir, file);
     const stats = fs.statSync(fullPath);
 
     // Skip excluded files/folders
     if (config.excludes.some((ex) => file.match(ex))) {
-      return;
+      continue;
     }
 
     if (stats.isDirectory()) {
       result.tree += `${"  ".repeat(level)}- ${file}\n`;
-      readAndMerge(fullPath, path.join(baseDir, file), level + 1, result);
+      await readAndMerge(fullPath, path.join(baseDir, file), level + 1, result);
     } else {
    
       // Only add file to tree if it matches the allowed extensions
@@ -54,6 +77,13 @@ function readAndMerge(dir, baseDir, level, result) {
 
         const content = fs.readFileSync(fullPath, "utf8");
 
+        const lineCount = await countLines(fullPath);
+        totalFiles++;
+        totalLines += lineCount;
+        const ext = path.extname(file).toLowerCase();
+        const lang = ext.slice(1).toUpperCase();
+        langLines[lang] = (langLines[lang] || 0) + lineCount;
+
         // Apply code.tpl template
         const fileBlock = codeTpl
           .replace("{{filename}}", path.join(baseDir, file))
@@ -61,9 +91,8 @@ function readAndMerge(dir, baseDir, level, result) {
 
         result.contents += fileBlock + "\n";
       }
-      
     }
-  });
+  };
 }
 
 // Check if input is a GitHub URL
@@ -213,7 +242,7 @@ switch (choice) {
 
   //Build tree & contents using final config
   let result = { tree: "", contents: "" };
-  readAndMerge(sourceDir, "", 0, result);
+  await readAndMerge(sourceDir, "", 0, result);
 
   //Generate output using chosen template
   const chosenTpl = fs.readFileSync(tplFile, "utf8");
@@ -223,6 +252,13 @@ switch (choice) {
 
   fs.writeFileSync(config.outputFile, finalOutput);
   console.log(`Successfully generated output: ${config.outputFile}`);
+
+  console.log(`\nProcessed ${totalFiles} files, ${totalLines} lines`);
+  for (const lang in langLines) {
+    console.log(`- ${lang.charAt(0).toUpperCase() + lang.slice(1)}: ${langLines[lang]}`);
+  }
 }
 
 main().catch((err) => console.error("Error:", err));
+
+
