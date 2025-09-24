@@ -77,12 +77,12 @@ async function readAndMerge(dir, baseDir, level, result) {
 
         const content = fs.readFileSync(fullPath, "utf8");
 
-        const lines = await countLines(fullPath);
+        const lineCount = await countLines(fullPath);
         totalFiles++;
-        totalLines += lines;
+        totalLines += lineCount;
         const ext = path.extname(file).toLowerCase();
         const lang = ext.slice(1).toUpperCase();
-        langLines[lang] = (langLines[lang] || 0) + lines;
+        langLines[lang] = (langLines[lang] || 0) + lineCount;
 
         // Apply code.tpl template
         const fileBlock = codeTpl
@@ -91,7 +91,6 @@ async function readAndMerge(dir, baseDir, level, result) {
 
         result.contents += fileBlock + "\n";
       }
-      
     }
   };
 }
