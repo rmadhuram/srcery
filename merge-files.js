@@ -30,6 +30,10 @@ const codeTpl = fs.readFileSync(
   "utf8"
 );
 
+let totalFiles = 0;
+let totalLines = 0;
+const langLines = {};
+
 // Recursive function to read files and build tree
 function readAndMerge(dir, baseDir, level, result) {
   const files = fs.readdirSync(dir);
@@ -53,6 +57,13 @@ function readAndMerge(dir, baseDir, level, result) {
         result.tree += `${"  ".repeat(level)}- ${file}\n`;
 
         const content = fs.readFileSync(fullPath, "utf8");
+
+        const lines = content.split('\n').length;
+        totalFiles++;
+        totalLines += lines;
+        const ext = path.extname(file).toLowerCase();
+        const lang = ext.slice(1);
+        langLines[lang] = (langLines[lang] || 0) + lines;
 
         // Apply code.tpl template
         const fileBlock = codeTpl
@@ -223,6 +234,13 @@ switch (choice) {
 
   fs.writeFileSync(config.outputFile, finalOutput);
   console.log(`Successfully generated output: ${config.outputFile}`);
+
+  console.log(`\nProcessed ${totalFiles} files, ${totalLines} lines`);
+  for (const lang in langLines) {
+    console.log(`- ${lang.charAt(0).toUpperCase() + lang.slice(1)}: ${langLines[lang]}`);
+  }
 }
 
 main().catch((err) => console.error("Error:", err));
+
+
