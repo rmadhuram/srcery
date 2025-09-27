@@ -2,5 +2,7 @@
   "includes": [".js", ".ts", ".tsx", ".html", ".json"],
   "excludes": ["node_modules", "public", "package-lock.json",".git"],
   "showTree": true,
-  "outputFile": "./prompt.txt"
+  "outputFile": "./prompt.txt",
+  "onlyImportant": false,
+  "importantFiles": []
 }
