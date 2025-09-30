@@ -75,7 +75,7 @@ async function readAndMerge(dir, baseDir, level, result) {
       if (config.includes.some((ext) => file.endsWith(ext))) {
         result.tree += `${"  ".repeat(level)}- ${file}\n`;
 
-        const content = fs.readFileSync(fullPath, "utf8");
+        let content = fs.readFileSync(fullPath, "utf8");
 
         if (config.onlyImportant) {
           const manuallyMarked = (config.importantFiles || []).includes(path.join(baseDir, file));
@@ -84,6 +84,9 @@ async function readAndMerge(dir, baseDir, level, result) {
           if (!manuallyMarked && !hasAnnotation) {
             continue; 
           }
+          content = content.replace(/^\s*(\/\/|#)\s*@important\s*$/gm, '');
+          fs.writeFileSync(fullPath, content, "utf8");
+
         }
 
         const lineCount = await countLines(fullPath);
@@ -244,7 +247,7 @@ switch (choice) {
     console.log('a) Dump all the files');
     console.log('b) Only include important files (via @important or config)');
 
-    const userChoice = await askQuestion("select an option (a/b)");
+    const userChoice = await askQuestion("select an option (a/b) :");
 
     if (userChoice === 'b') {
       config.onlyImportant = true;
