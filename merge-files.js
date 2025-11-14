@@ -69,13 +69,25 @@ async function readAndMerge(dir, baseDir, level, result) {
     if (stats.isDirectory()) {
       result.tree += `${"  ".repeat(level)}- ${file}\n`;
       await readAndMerge(fullPath, path.join(baseDir, file), level + 1, result);
+      
     } else {
-   
       // Only add file to tree if it matches the allowed extensions
       if (config.includes.some((ext) => file.endsWith(ext))) {
         result.tree += `${"  ".repeat(level)}- ${file}\n`;
 
-        const content = fs.readFileSync(fullPath, "utf8");
+        let content = fs.readFileSync(fullPath, "utf8");
+
+        if (config.onlyImportant) {
+          const manuallyMarked = (config.importantFiles || []).includes(path.join(baseDir, file));
+          const hasAnnotation = content.includes("@important");
+
+          if (!manuallyMarked && !hasAnnotation) {
+            continue; 
+          }
+          content = content.replace(/^\s*(\/\/|#)\s*@important\s*$/gm, '');
+          fs.writeFileSync(fullPath, content, "utf8");
+
+        }
 
         const lineCount = await countLines(fullPath);
         totalFiles++;
@@ -92,8 +104,9 @@ async function readAndMerge(dir, baseDir, level, result) {
         result.contents += fileBlock + "\n";
       }
     }
-  };
+  }
 }
+
 
 // Check if input is a GitHub URL
 function isGitUrl(str) {
@@ -230,6 +243,16 @@ switch (choice) {
     tplFile = path.join(__dirname, "config/features.tpl");
     break;
   case "3":
+    console.log('\nGenerating README.MD:\n');
+    console.log('a) Dump all the files');
+    console.log('b) Only include important files (via @important or config)');
+
+    const userChoice = await askQuestion("select an option (a/b) :");
+
+    if (userChoice === 'b') {
+      config.onlyImportant = true;
+    }
+
     tplFile = path.join(__dirname, "config/readme.tpl");
     break;
   case "4":
